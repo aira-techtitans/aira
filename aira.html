@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chatbot</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+/* Global Styles */
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* Header Section */
+.header-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.header-text {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.header-text span {
+    color: #fff;
+}
+
+.header-text .aira {
+    color: #00d9ff;
+}
+
+.qr-icon img {
+    width: 70px;
+    height: 70px;
+    border-radius: 7px;
+}
+
+.header {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.header span {
+    color: #fff;
+}
+
+.header .aira {
+    color: #00d9ff;
+}
+
+.header img {
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+}
+
+/* Chatbox Styles */
+.chatbox {
+    width: 90%;
+    max-width: 1000px;
+    background-color: rgba(20, 20, 20, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    overflow: hidden;
+}
+
+.chatbox-header {
+    background-color: #1b2a34;
+    padding: 15px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #00d9ff;
+}
+
+.messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: #131a21;
+}
+
+.message {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    max-width: 80%;
+}
+
+.user-message {
+    margin-left: auto;
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.user-message div {
+    background-color: #2a3b56;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 15px;
+    text-align: left;
+}
+
+.bot-message div {
+    background-color: #2d2d2d;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 15px;
+    text-align: left;
+}
+
+.user-icon, .bot-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 0 10px;
+}
+
+.user-icon {
+    background-image: url("{{ url_for('static', filename='user.png') }}");
+    background-size: cover;
+}
+
+.bot-icon {
+    background-image: url("{{ url_for('static', filename='logo.jpg') }}");
+    background-size: cover;
+}
+
+.input-box {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: #1b2a34;
+}
+
+.input-box input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #2d2d2d;
+    color: #fff;
+    outline: none;
+}
+
+.input-box button {
+    background-color: #000;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.input-box button:hover {
+    background-color: #333;
+    transform: scale(1.05);
+}
+
+.messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: #00d9ff;
+    border-radius: 10px;
+}
+</style>
+</head>
+<body>
+
+<!-- Header with Small QR Code Icon -->
+
+<div class="header-container">
+    <div class="header-text">
+        <span>Chat with</span> <span class="aira">AIRA</span>
+    </div>
+    <div class="qr-icon">
+        <a href="https://aira-techtitans.my.canva.site/" target="_blank">
+            <img src="{{ url_for('static', filename='qr.png') }}" alt="QR Code">
+        </a>
+    </div>
+</div>
+
+<!-- Chatbox -->
+<div class="chatbox">
+    <div class="chatbox-header">Chat with AIRA</div>
+    <div class="messages" id="messages"></div>
+    <div class="input-box">
+        <input type="text" id="userInput" placeholder="Type your message here...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+const messagesDiv = document.getElementById("messages");
+
+function appendMessage(sender, message) {
+    const messageContainer = document.createElement("div");
+    messageContainer.className = "message";
+    const icon = document.createElement("div");
+    const messageDiv = document.createElement("div");
+
+    // Process the bot's response
+    if (sender !== "You") {
+        const lines = message.split("\n"); // Split into lines for numbered list processing
+        const formattedMessage = lines.map(line => {
+            if (/^\d+\./.test(line.trim())) {
+                // If line starts with a number (e.g., "1.")
+                return `<div>${line.trim()}</div>`;
+            }
+            // Replace **bold** text
+            return line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        }).join("<br>"); // Join with line breaks
+        messageDiv.innerHTML = formattedMessage;
+    } else {
+        messageDiv.innerHTML = `<div>${message}</div>`;
+    }
+
+    if (sender === "You") {
+        messageContainer.classList.add("user-message");
+        icon.className = "user-icon";
+        messageContainer.appendChild(messageDiv);
+        messageContainer.appendChild(icon);
+    } else {
+        messageContainer.classList.add("bot-message");
+        icon.className = "bot-icon";
+        messageContainer.appendChild(icon);
+        messageContainer.appendChild(messageDiv);
+    }
+
+    messagesDiv.appendChild(messageContainer);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+async function sendMessage() {
+    const userInput = document.getElementById("userInput").value.trim();
+    if (!userInput) return;
+    appendMessage("You", userInput);
+    document.getElementById("userInput").value = "";
+
+    try {
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_input: userInput }),
+        });
+        const data = await response.json();
+        if (data.gemini_response) {
+            appendMessage("Bot", data.gemini_response);
+        } else {
+            appendMessage("Bot", "Sorry, I didn't get a valid response.");
+        }
+    } catch (error) {
+        appendMessage("Bot", "Error: Unable to communicate with the server.");
+    }
+}
+
+document.getElementById("userInput").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+});
+</script>
+</body>
+</html>
+
